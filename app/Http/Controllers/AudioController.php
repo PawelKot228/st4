@@ -12,7 +12,7 @@ class AudioController extends Controller
 
         $audios = \Storage::disk('public')->allFiles('audio');
 
-        return view('welcome', compact('audios'));
+        return view('audio', compact('audios'));
     }
 
 

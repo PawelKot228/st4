@@ -1,102 +1,79 @@
 <x-app-layout>
     <div>
-        <div class="flex justify-center py-4 gap-2">
+        <div class="flex flex-col justify-center py-4 px-28 max-w-2xl gap-8 mx-auto">
+            <div>
+                <p id="notRecording" class="text-green-400">Currently not recording</p>
+                <p id="recording" class="hidden text-red-500">Recording</p>
+            </div>
+
+            <div>
+                <x-input-label for="minutes" :value="__('Time in seconds')"/>
+
+                <x-text-input
+                    class="block mt-1 w-full"
+                    type="number"
+                    id="minutes"
+                    name="minutes"
+                    max="3599"
+                />
+
+            </div>
+
+
             <x-primary-button id="start">
                 Start recording
             </x-primary-button>
-            <x-primary-button id="stop" disabled>
-                Stop recording
-            </x-primary-button>
-            <x-secondary-button id="submit" disabled>
-                submit
-            </x-secondary-button>
+
         </div>
-        <div class="flex flex-col justify-center items-center gap-2 py-4">
-            <audio id="audio" controls></audio>
-            <a id="download" href="#" download="recording.wav">Download recording</a>
-        </div>
+
 
         <script>
-            let mediaRecorder;
-            let audioChunks = [];
-
-            let isSendingAudio = false;
-            let audioBlob;
-
             const startButton = document.getElementById('start');
-            const stopButton = document.getElementById('stop');
-            const submitButton = document.getElementById('submit');
-            const audioElement = document.getElementById('audio');
-            const downloadLink = document.getElementById('download');
+            const notRecording = document.getElementById('notRecording');
+            const recording = document.getElementById('recording');
+
+            const recordingTimeInput = document.getElementById('minutes')
 
             startButton.addEventListener('click', startRecording);
-            stopButton.addEventListener('click', stopRecording);
-            submitButton.addEventListener('click', sendRecording);
 
             async function startRecording() {
                 startButton.disabled = true;
-                stopButton.disabled = false;
 
-                audioChunks = [];
-                const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+                const url = new URL("{{ route('camera.start') }}");
 
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.addEventListener('dataavailable', event => {
-                    audioChunks.push(event.data);
-                });
-
-                mediaRecorder.addEventListener('stop', () => {
-                    audioBlob = new Blob(audioChunks, {'type': 'audio/wav'});
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    audioElement.src = audioUrl;
-                    downloadLink.href = audioUrl;
-                });
-
-                mediaRecorder.start();
-            }
-
-            function stopRecording() {
-                startButton.disabled = false;
-                submitButton.disabled = false;
-                stopButton.disabled = true;
-
-                if (mediaRecorder) {
-                    mediaRecorder.stop();
-                }
-            }
-
-            function sendRecording() {
-                if(isSendingAudio || !audioBlob) {
-                    return
+                if(recordingTimeInput?.value) {
+                    url.searchParams.set('time', recordingTimeInput?.value)
                 }
 
-                isSendingAudio = true;
+                notRecording.classList.add('hidden')
+                recording.classList.remove('hidden')
 
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'recording.wav');
+                fetch(url.toString())
+                    .then(res => res.json())
+                    .then(res => {
+                        console.log(res);
 
-                fetch('{{ route('audio.save') }}', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(data => {
-                    console.log(data)
-                    isSendingAudio = false;
-                    location.reload();
-                })
-                .catch(error => console.error('Error:', error));
+                        notRecording.classList.remove('hidden')
+                        recording.classList.add('hidden')
+                        startButton.disabled = false;
+                    })
             }
+
         </script>
     </div>
 
     <div class="py-4">
-        <h2 class="text-xl font-semibold text-center">Audios</h2>
+        <h2 class="text-xl font-semibold text-center">Videos</h2>
 
         <div class="my-4">
-            @foreach($audios as $audio)
+            @foreach($videos as $video)
+                @if($video === 'video/.DS_Store')
+                    @continue
+                @endif
+
                 <div class="flex flex-col justify-center items-center gap-2 my-4">
-                    <p>{{ $audio }}</p>
-                    <audio id="audio" controls src="{{ asset("storage/$audio") }}"></audio>
+                    <p>{{ $video }}</p>
+                    <video id="audio" controls src="{{ asset("storage/$video") }}"></video>
                 </div>
             @endforeach
         </div>

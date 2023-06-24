@@ -31,6 +31,8 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'os' => env('APP_OS', 'macos'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

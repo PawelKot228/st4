@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AudioController;
+use App\Http\Controllers\CameraController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +16,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [AudioController::class, 'index'])->name('welcome');
+Route::get('/', [CameraController::class, 'index'])->name('welcome');
+Route::get('/audio', [AudioController::class, 'index'])->name('audio.index');
+
+Route::prefix('camera')
+    ->name('camera.')
+    ->group(function () {
+       Route::get('start', [CameraController::class, 'startRecording'])->name('start');
+       Route::get('stop', [CameraController::class, 'stopRecording'])->name('stop');
+    });
 
 Route::get('/dashboard', function () {
     return view('dashboard');
